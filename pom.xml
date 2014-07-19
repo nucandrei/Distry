@@ -11,6 +11,7 @@
 		<module>Service</module>
 		<module>MS</module>
 		<module>DistryService</module>
+		<module>DistryMonitor</module>
 	</modules>
 	<dependencies>
 		<dependency>

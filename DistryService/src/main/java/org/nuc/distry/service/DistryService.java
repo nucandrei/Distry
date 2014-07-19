@@ -31,6 +31,10 @@ public class DistryService extends Service {
         }
     }
 
+    public ServiceConfiguration getServiceConfiguration() {
+        return serviceConfiguration;
+    }
+
     public void setServiceState(ServiceState serviceState, boolean forceHeartbeat) {
         this.heartbeatGenerator.setServiceState(serviceState);
         if (forceHeartbeat) {
