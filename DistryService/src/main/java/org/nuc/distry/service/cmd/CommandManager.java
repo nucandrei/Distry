@@ -6,27 +6,35 @@ import java.util.Set;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.nuc.distry.service.Publisher;
 
 public class CommandManager {
     private static final Logger LOGGER = Logger.getLogger(CommandManager.class);
     private final Map<Class<? extends Command>, CommandAction> supportedCommands = new HashMap<>();
+    private final Publisher publisher;
 
-    public CommandManager() {
+    public CommandManager(Publisher publisher) {
         addGenericCommandsListeners();
+        this.publisher = publisher;
     }
 
     public void addSupportedCommand(Class<? extends Command> commandClass, CommandAction action) {
         supportedCommands.put(commandClass, action);
     }
 
-    public void onCommand(Command command) {
+    public void onCommand(Command command, boolean targeted) {
         final Class<? extends Command> commandClass = command.getClass();
         if (supportedCommands.containsKey(commandClass)) {
             final CommandAction commandAction = supportedCommands.get(commandClass);
             commandAction.onCommand(command);
-            
+
         } else {
-            LOGGER.warn("Unsupported command received " + commandClass);
+            if (targeted) {
+                LOGGER.warn("Unsupported targeted command received " + commandClass);
+
+            } else {
+                LOGGER.info("Ignored unsupported broadcast command" + commandClass);
+            }
         }
     }
 
@@ -41,6 +49,14 @@ public class CommandManager {
                 LOGGER.info("Received stop command");
                 LogManager.shutdown();
                 System.exit(0);
+            }
+        });
+
+        supportedCommands.put(PublishSupportedCmdsCommand.class, new CommandAction() {
+            @Override
+            public void onCommand(Command command) {
+                LOGGER.info("Received publish supported commands command");
+                publisher.publishSupportedCommands();
             }
         });
     }

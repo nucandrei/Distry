@@ -1,8 +1,10 @@
 package org.nuc.distry.monitor;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -19,6 +21,9 @@ import org.nuc.distry.service.DistryListener;
 import org.nuc.distry.service.DistryService;
 import org.nuc.distry.service.ServiceConfiguration;
 import org.nuc.distry.service.cmd.Command;
+import org.nuc.distry.service.cmd.PublishSupportedCmdsCommand;
+import org.nuc.distry.service.cmd.SupportedCommandsContainer;
+import org.nuc.distry.service.cmd.TargetedCommand;
 import org.nuc.distry.service.hb.Heartbeat;
 import org.nuc.distry.service.messaging.ActiveMQAdapter;
 import org.nuc.distry.util.Observable;
@@ -29,17 +34,36 @@ public class DistryMonitor extends DistryService {
     private static final String DISTRYMONITOR_SERVICE_NAME = "DistryMonitor";
     private static final Logger LOGGER = Logger.getLogger(DistryMonitor.class);
     private final Map<String, ServiceHeartbeatCollector> collectors = new HashMap<>();
+    private final Map<String, Set<Class<? extends Command>>> supportedCommandsByServiceName = new HashMap<>();
     public final Observable<ServiceHeartInfo> serviceInfo = new Observable<>();
 
     public DistryMonitor(ServiceConfiguration configuration) throws Exception {
         super(DISTRYMONITOR_SERVICE_NAME, configuration);
         super.start();
         startListeningForHeartbeats();
+        requestSupportedCommands();
         startTick();
     }
 
     public void sendCommand(Command command) throws JMSException {
+        if (command instanceof TargetedCommand) {
+            final TargetedCommand targetedCommand = (TargetedCommand) command;
+            final String serviceName = targetedCommand.getServiceName();
+            if (!getSupportedCommands(serviceName).contains(targetedCommand.getClass())) {
+                LOGGER.error("Tried to send illegal command " + command.getClass());
+                return;
+            }
+        }
         sendMessage(getServiceConfiguration().getCommandTopic(), command);
+    }
+
+    public Set<Class<? extends Command>> getSupportedCommands(String serviceName) {
+        if (supportedCommandsByServiceName.containsKey(serviceName)) {
+            return supportedCommandsByServiceName.get(serviceName);
+
+        } else {
+            return Collections.emptySet();
+        }
     }
 
     private void startListeningForHeartbeats() throws JMSException {
@@ -83,12 +107,26 @@ public class DistryMonitor extends DistryService {
         new Timer().scheduleAtFixedRate(tickTask, 0, getServiceConfiguration().getHeartbeatInterval());
     }
 
+    private void requestSupportedCommands() throws JMSException {
+        final DistryListener supportedCommandsListener = new DistryListener() {
+            @Override
+            public void onMessage(Serializable message) {
+                if (message instanceof SupportedCommandsContainer) {
+                    final SupportedCommandsContainer container = (SupportedCommandsContainer) message;
+                    supportedCommandsByServiceName.put(container.getServiceName(), container.getSupportedCommands());
+                }
+            }
+        };
+        addMessageListener(getServiceConfiguration().getPublishTopic(), supportedCommandsListener);
+        sendMessage(getServiceConfiguration().getCommandTopic(), new PublishSupportedCmdsCommand());
+    }
+
     public static void main(String[] args) {
         try {
             BasicConfigurator.configure();
             final String serverAddress = parseArguments(args);
-            new DistryMonitor(new ServiceConfiguration(new ActiveMQAdapter(serverAddress), true, 10000, "Heartbeat", true, "Commands"));
-            
+            new DistryMonitor(new ServiceConfiguration(new ActiveMQAdapter(serverAddress), true, 10000, "Heartbeat", true, "Commands", "Publish"));
+
         } catch (Exception e) {
             LOGGER.error("Failed to start DistryMonitor", e);
         }

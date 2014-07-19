@@ -9,14 +9,16 @@ public class ServiceConfiguration {
     private final String heartbeatTopic;
     private final boolean obeyCommands;
     private final String commandTopic;
+    private final String publishTopic;
 
-    public ServiceConfiguration(MessagingAdapter adapter, boolean sendHeartbeats, int heartbeatInterval, String heartbeatTopic, boolean obeyCommands, String commandTopic) {
+    public ServiceConfiguration(MessagingAdapter adapter, boolean sendHeartbeats, int heartbeatInterval, String heartbeatTopic, boolean obeyCommands, String commandTopic, String publishTopic) {
         this.adapter = adapter;
         this.sendHeartbeats = sendHeartbeats;
         this.heartbeatInterval = heartbeatInterval;
         this.heartbeatTopic = heartbeatTopic;
         this.obeyCommands = obeyCommands;
         this.commandTopic = commandTopic;
+        this.publishTopic = publishTopic;
     }
 
     public MessagingAdapter getMessagingAdapter() {
@@ -41,5 +43,9 @@ public class ServiceConfiguration {
 
     public String getCommandTopic() {
         return commandTopic;
+    }
+
+    public String getPublishTopic() {
+        return publishTopic;
     }
 }

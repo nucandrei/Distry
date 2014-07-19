@@ -2,6 +2,7 @@ package org.nuc.distry.service;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -10,15 +11,18 @@ import javax.jms.JMSException;
 import org.apache.log4j.Logger;
 import org.jdom2.Document;
 import org.jdom2.JDOMException;
+import org.nuc.distry.service.cmd.BroadcastCommand;
 import org.nuc.distry.service.cmd.Command;
 import org.nuc.distry.service.cmd.CommandAction;
 import org.nuc.distry.service.cmd.CommandManager;
+import org.nuc.distry.service.cmd.SupportedCommandsContainer;
+import org.nuc.distry.service.cmd.TargetedCommand;
 import org.nuc.distry.service.hb.Heartbeat;
 import org.nuc.distry.service.hb.HeartbeatGenerator;
 import org.nuc.distry.service.hb.ServiceState;
 import org.nuc.distry.service.io.FileManager;
 
-public class DistryService extends Service {
+public class DistryService extends Service implements Publisher {
     private final static Logger LOGGER = Logger.getLogger(DistryService.class);
     private final HeartbeatGenerator heartbeatGenerator;
     private final FileManager fileManager;
@@ -30,14 +34,14 @@ public class DistryService extends Service {
         this.serviceConfiguration = configuration;
         this.heartbeatGenerator = new HeartbeatGenerator(serviceName);
         this.fileManager = new FileManager();
-        this.commandManager = new CommandManager();
+        this.commandManager = new CommandManager(this);
     }
 
     public void start() throws JMSException {
         if (serviceConfiguration.sendHeartbeats()) {
             startHeartbeatGenerator();
         }
-        
+
         if (serviceConfiguration.obeyCommands()) {
             startListeningForCommands();
         }
@@ -73,6 +77,17 @@ public class DistryService extends Service {
         this.commandManager.addSupportedCommand(commandClass, action);
     }
 
+    @Override
+    public void publishSupportedCommands() {
+        try {
+            final SupportedCommandsContainer container = new SupportedCommandsContainer(new HashSet<>(commandManager.getSupportedCommands()), getServiceName());
+            sendMessage(getServiceConfiguration().getPublishTopic(), container);
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to publish supported commands", e);
+        }
+    }
+
     private void startHeartbeatGenerator() {
         Timer timer = new Timer();
         final TimerTask heartbeatTask = new TimerTask() {
@@ -98,12 +113,16 @@ public class DistryService extends Service {
         addMessageListener(serviceConfiguration.getCommandTopic(), new DistryListener() {
             @Override
             public void onMessage(Serializable message) {
-                if (message instanceof Command) {
-                    final Command command = (Command) message;
+                if (message instanceof TargetedCommand) {
+                    final TargetedCommand command = (TargetedCommand) message;
                     if (command.getServiceName().equals(getServiceName())) {
-                        commandManager.onCommand(command);
+                        commandManager.onCommand(command, true);
                     }
-                    
+
+                } else if (message instanceof BroadcastCommand) {
+                    final BroadcastCommand command = (BroadcastCommand) message;
+                    commandManager.onCommand(command, false);
+
                 } else {
                     LOGGER.warn("Received unwanted message on command topic : " + message.getClass().toString());
                 }
