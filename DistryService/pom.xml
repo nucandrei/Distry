@@ -6,5 +6,12 @@
 		<artifactId>distry</artifactId>
 		<version>0.1</version>
 	</parent>
-	<artifactId>MS</artifactId>
+	<artifactId>DistryService</artifactId>
+	<dependencies>
+		<dependency>
+			<groupId>org.jdom</groupId>
+			<artifactId>jdom</artifactId>
+			<version>2.0.2</version>
+		</dependency>
+	</dependencies>
 </project>
