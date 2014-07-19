@@ -45,7 +45,6 @@ public class MessagingServerStarter {
         } else {
             throw new IllegalArgumentException("bindAddress argument is missing");
         }
-
     }
 
     private static void startServer(String bindAddress) throws Exception {
