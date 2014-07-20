@@ -5,7 +5,7 @@ import org.nuc.distry.service.hb.Heartbeat;
 public class ServiceHeartbeatCollector {
     private final String serviceName;
     private Heartbeat lastHeartbeat;
-    private ServiceStatus serviceStatus;
+    private ServiceStatus serviceStatus = ServiceStatus.UNKNOWN;
     private final boolean configured;
 
     public ServiceHeartbeatCollector(String serviceName, boolean configured) {
