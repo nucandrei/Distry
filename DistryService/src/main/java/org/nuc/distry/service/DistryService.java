@@ -8,6 +8,7 @@ import java.util.TimerTask;
 
 import javax.jms.JMSException;
 
+import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.jdom2.Document;
 import org.jdom2.JDOMException;
@@ -86,6 +87,12 @@ public class DistryService extends Service implements Publisher {
         } catch (Exception e) {
             LOGGER.error("Failed to publish supported commands", e);
         }
+    }
+    
+    @Override
+    public void shutdownGracefully() {
+        LogManager.shutdown();
+        System.exit(0);
     }
 
     private void startHeartbeatGenerator() {

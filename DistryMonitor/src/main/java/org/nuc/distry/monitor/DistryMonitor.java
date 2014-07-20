@@ -3,6 +3,7 @@ package org.nuc.distry.monitor;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
@@ -33,12 +34,23 @@ public class DistryMonitor extends DistryService {
     private static final String LOG4J = "log4j";
     private static final String DISTRYMONITOR_SERVICE_NAME = "DistryMonitor";
     private static final Logger LOGGER = Logger.getLogger(DistryMonitor.class);
+    
+    private static final boolean CONFIGURED = true;
+    private static final boolean NOT_CONFIGURED = false;
+    
     private final Map<String, ServiceHeartbeatCollector> collectors = new HashMap<>();
     private final Map<String, Set<Class<? extends Command>>> supportedCommandsByServiceName = new HashMap<>();
+    
     public final Observable<ServiceHeartInfo> serviceInfo = new Observable<>();
+    
+    
 
     public DistryMonitor(ServiceConfiguration configuration) throws Exception {
-        super(DISTRYMONITOR_SERVICE_NAME, configuration);
+        this(DISTRYMONITOR_SERVICE_NAME, configuration);
+    }
+
+    public DistryMonitor(String serviceName, ServiceConfiguration configuration) throws Exception {
+        super(serviceName, configuration);
         super.start();
         startListeningForHeartbeats();
         requestSupportedCommands();
@@ -66,6 +78,12 @@ public class DistryMonitor extends DistryService {
         }
     }
 
+    public void initConfiguredServices(List<String> configuredServices) {
+        for (String configuredService : configuredServices) {
+            collectors.put(configuredService, new ServiceHeartbeatCollector(configuredService, CONFIGURED));
+        }
+    }
+
     private void startListeningForHeartbeats() throws JMSException {
         final DistryListener heartbeatListener = new DistryListener() {
             @Override
@@ -85,7 +103,7 @@ public class DistryMonitor extends DistryService {
         final String serviceName = receivedHeartbeat.getServiceName();
         ServiceHeartbeatCollector serviceHeartbeatCollector = collectors.get(serviceName);
         if (serviceHeartbeatCollector == null) {
-            serviceHeartbeatCollector = new ServiceHeartbeatCollector(serviceName);
+            serviceHeartbeatCollector = new ServiceHeartbeatCollector(serviceName, NOT_CONFIGURED);
             collectors.put(serviceName, serviceHeartbeatCollector);
         }
 

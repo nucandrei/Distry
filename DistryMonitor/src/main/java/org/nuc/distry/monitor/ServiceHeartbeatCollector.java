@@ -6,9 +6,11 @@ public class ServiceHeartbeatCollector {
     private final String serviceName;
     private Heartbeat lastHeartbeat;
     private ServiceStatus serviceStatus;
+    private final boolean configured;
 
-    public ServiceHeartbeatCollector(String serviceName) {
+    public ServiceHeartbeatCollector(String serviceName, boolean configured) {
         this.serviceName = serviceName;
+        this.configured = configured;
     }
 
     public String getServiceName() {
@@ -39,7 +41,7 @@ public class ServiceHeartbeatCollector {
     }
 
     public ServiceHeartInfo getServiceHeartInfo() {
-        return new ServiceHeartInfo(lastHeartbeat, getServiceStatus());
+        return new ServiceHeartInfo(lastHeartbeat, getServiceStatus(), configured);
     }
 
     public ServiceStatus getServiceStatus() {
@@ -47,5 +49,9 @@ public class ServiceHeartbeatCollector {
             return ServiceStatus.OK;
         }
         return serviceStatus;
+    }
+
+    public boolean isConfigured() {
+        return configured;
     }
 }

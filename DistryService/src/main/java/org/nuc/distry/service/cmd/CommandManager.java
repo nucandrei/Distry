@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.nuc.distry.service.Publisher;
 
@@ -47,8 +46,7 @@ public class CommandManager {
             @Override
             public void onCommand(Command command) {
                 LOGGER.info("Received stop command");
-                LogManager.shutdown();
-                System.exit(0);
+                publisher.shutdownGracefully();
             }
         });
 
