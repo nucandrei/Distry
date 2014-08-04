@@ -1,0 +1,20 @@
+﻿# do not show eclipse garbage
+*/.settings/*
+.settings/*
+*.project
+*.classpath
+
+# do not show ignore file
+*/.gitignore
+
+# do not show compiled files
+*.class
+
+# do not show log files
+*.log
+
+# do not show target files
+*/target/*
+target/*
+
+*/activemq-data/*
