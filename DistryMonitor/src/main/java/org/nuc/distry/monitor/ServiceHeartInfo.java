@@ -6,9 +6,11 @@ public class ServiceHeartInfo implements Comparable<ServiceHeartInfo> {
     private final Heartbeat heartbeat;
     private final ServiceStatus serviceStatus;
     private final boolean configuredService;
+    private final String serviceName;
 
-    public ServiceHeartInfo(Heartbeat lastHeartbeat, ServiceStatus serviceStatus, boolean configuredService) {
+    public ServiceHeartInfo(Heartbeat lastHeartbeat, final String serviceName, ServiceStatus serviceStatus, boolean configuredService) {
         this.heartbeat = lastHeartbeat;
+        this.serviceName = serviceName;
         this.serviceStatus = serviceStatus;
         this.configuredService = configuredService;
     }
@@ -22,7 +24,7 @@ public class ServiceHeartInfo implements Comparable<ServiceHeartInfo> {
     }
 
     public String getServiceName() {
-        return heartbeat.getServiceName();
+        return serviceName;
     }
 
     public boolean isConfiguredService() {

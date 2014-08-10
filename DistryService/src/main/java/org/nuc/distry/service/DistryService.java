@@ -94,6 +94,11 @@ public class DistryService extends Service implements Publisher {
         LogManager.shutdown();
         System.exit(0);
     }
+    
+    @Override
+    public void resetHeartbeat() {
+        heartbeatGenerator.reset();
+    }
 
     private void startHeartbeatGenerator() {
         Timer timer = new Timer();

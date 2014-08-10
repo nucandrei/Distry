@@ -57,5 +57,13 @@ public class CommandManager {
                 publisher.publishSupportedCommands();
             }
         });
+
+        supportedCommands.put(ResetHeartbeatCommand.class, new CommandAction() {
+            @Override
+            public void onCommand(Command command) {
+                LOGGER.info("Received reset heartbeat command");
+                publisher.resetHeartbeat();
+            }
+        });
     }
 }

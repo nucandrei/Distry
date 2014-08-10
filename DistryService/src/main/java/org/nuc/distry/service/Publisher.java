@@ -4,4 +4,6 @@ public interface Publisher {
     public void publishSupportedCommands();
 
     public void shutdownGracefully();
+    
+    public void resetHeartbeat();
 }

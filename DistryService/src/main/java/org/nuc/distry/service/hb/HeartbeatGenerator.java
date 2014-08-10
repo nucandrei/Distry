@@ -29,4 +29,9 @@ public class HeartbeatGenerator {
         updateTime();
         return new Heartbeat(serviceName, serviceState, commment, time);
     }
+
+    public void reset() {
+        this.serviceState = ServiceState.NO_ERROR;
+        this.commment = "";
+    }
 }

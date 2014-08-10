@@ -41,7 +41,7 @@ public class ServiceHeartbeatCollector {
     }
 
     public ServiceHeartInfo getServiceHeartInfo() {
-        return new ServiceHeartInfo(lastHeartbeat, getServiceStatus(), configured);
+        return new ServiceHeartInfo(lastHeartbeat, serviceName, getServiceStatus(), configured);
     }
 
     public ServiceStatus getServiceStatus() {
